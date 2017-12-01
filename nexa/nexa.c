@@ -1,5 +1,3 @@
-// gcc nexa.c nexalib/nexalib.c nexalib/gpio.c -std=gnu99 -o nexa
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

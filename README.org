@@ -1,0 +1,33 @@
+* Raspberry Pi Nexa Switch
+
+Note: This program has only been tested on a Raspberry Pi 1 Model B.
+
+** Compile the project
+
+Run the following command in the =nexa= directory to build the project:
+
+#+BEGIN_SRC bash
+gcc nexa.c nexalib/nexalib.c nexalib/gpio.c -std=gnu99 -o nexa
+#+END_SRC
+
+** How to use the program
+
+Currently the program supports up to three devices but there are no problems to
+add many more devices. Note that you need to run the command as root in order to
+have permissions to use the gpio pins. To turn on or off a channel you run:
+
+#+BEGIN_SRC bash
+# sudo ./nexa <channel> <on|off>
+# e.g.
+
+sudo ./nexa 1 on # Will turn on device number one
+#+END_SRC
+
+In order to send a command to all devices in the group you run:
+
+#+BEGIN_SRC bash
+# sudo ./nexa group <on|off>
+# e.g.
+
+sudo ./nexa groip on
+#+END_SRC
