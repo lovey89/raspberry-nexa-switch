@@ -1,5 +1,5 @@
-#include <stdbool.h>
-#include <stdlib.h>
+#include "nexalib.h"
+
 #include <time.h>
 
 #include "gpio.h"
@@ -22,13 +22,13 @@ struct timespec resendSleepTime;
 struct timespec remTime;
 
 /* PRIVATE FUNCTION DECLARATIONS */
-void Nexa__sendStartBits();
-void Nexa__sendStopBits();
-void Nexa__sendLow(char count);
-void Nexa__sendHigh(char count);
-void Nexa__sendOne();
-void Nexa__sendZero();
-int32_t Nexa__nexaCode(int32_t groupCode, bool groupCommand, bool activate, char deviceCode);
+void sendStartBits();
+void sendStopBits();
+void sendManchesterEncodedOne();
+void sendManchesterEncodedZero();
+void sendLow(char count);
+void sendHigh(char count);
+int32_t createNexaCode(int32_t groupCode, bool groupCommand, bool activate, char deviceCode);
 char boolToBit(bool boolVar);
 
 void Nexa__setup()
@@ -51,7 +51,7 @@ void Nexa__sendCode(
   int32_t groupCode, bool groupCommand, bool activate, char deviceCode)
 {
   int32_t nexaCodeOrig =
-    Nexa__nexaCode(groupCode, groupCommand, activate, deviceCode);
+    createNexaCode(groupCode, groupCommand, activate, deviceCode);
 
   int32_t mask = 0x80000000;
 
@@ -59,56 +59,56 @@ void Nexa__sendCode(
   for (int i = 0 ; i < 10 ; i++)
   {
     int32_t nexaCode = nexaCodeOrig;
-    Nexa__sendStartBits();
+    sendStartBits();
     for (int bit = 0; bit < 32; bit++)
     {
       int32_t currentBit = nexaCode & mask;
       if (currentBit) // Current bit is set
       {
-        Nexa__sendOne();
+        sendManchesterEncodedOne();
       }
       else
       {
-        Nexa__sendZero();
+        sendManchesterEncodedZero();
       }
       nexaCode <<= 1;
     }
-    Nexa__sendStopBits();
+    sendStopBits();
 
     nanosleep(&resendSleepTime, &remTime);
   }
 }
 
-void Nexa__sendStartBits()
+void sendStartBits()
 {
-  Nexa__sendLow(4);
-  Nexa__sendHigh(1);
-  Nexa__sendLow(7);
+  sendLow(4);
+  sendHigh(1);
+  sendLow(7);
 }
 
-void Nexa__sendStopBits()
+void sendStopBits()
 {
-  Nexa__sendHigh(1);
-  Nexa__sendLow(4);
+  sendHigh(1);
+  sendLow(4);
 }
 
-void Nexa__sendOne()
+void sendManchesterEncodedOne()
 {
-  Nexa__sendHigh(1);
-  Nexa__sendLow(4);
-  Nexa__sendHigh(1);
-  Nexa__sendLow(1);
+  sendHigh(1);
+  sendLow(4);
+  sendHigh(1);
+  sendLow(1);
 }
 
-void Nexa__sendZero()
+void sendManchesterEncodedZero()
 {
-  Nexa__sendHigh(1);
-  Nexa__sendLow(1);
-  Nexa__sendHigh(1);
-  Nexa__sendLow(4);
+  sendHigh(1);
+  sendLow(1);
+  sendHigh(1);
+  sendLow(4);
 }
 
-void Nexa__sendHigh(char count)
+void sendHigh(char count)
 {
   for (char i = 0; i < count; i++)
   {
@@ -117,7 +117,7 @@ void Nexa__sendHigh(char count)
   }
 }
 
-void Nexa__sendLow(char count)
+void sendLow(char count)
 {
   for (char i = 0; i < count; i++)
   {
@@ -126,7 +126,7 @@ void Nexa__sendLow(char count)
   }
 }
 
-int32_t Nexa__nexaCode(int32_t groupCode, bool groupCommand, bool activate, char deviceCode)
+int32_t createNexaCode(int32_t groupCode, bool groupCommand, bool activate, char deviceCode)
 {
   int32_t nexaCode = 0;
 
@@ -140,12 +140,5 @@ int32_t Nexa__nexaCode(int32_t groupCode, bool groupCommand, bool activate, char
 
 char boolToBit(bool boolVar)
 {
-  if (boolVar)
-  {
-    return 1;
-  }
-  else
-  {
-    return 0;
-  }
+  return boolVar ? 1 : 0;
 }
