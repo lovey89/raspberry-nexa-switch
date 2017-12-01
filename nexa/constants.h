@@ -1,0 +1,10 @@
+#ifndef CONSTANTS_H
+#define CONSTANTS_H
+
+#define DATA_PIN 7
+
+#define SLEEP_NS 222000
+
+#define GROUP_CODE 0b00101001100010000000100110
+
+#endif // CONSTANTS_H
