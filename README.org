@@ -29,5 +29,5 @@ In order to send a command to all devices in the group you run:
 # sudo ./nexa group <on|off>
 # e.g.
 
-sudo ./nexa groip on
+sudo ./nexa group on # Turn on all devices
 #+END_SRC
