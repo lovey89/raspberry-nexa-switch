@@ -31,3 +31,149 @@ In order to send a command to all devices in the group you run:
 
 sudo ./nexa group on # Turn on all devices
 #+END_SRC
+
+** Hardware
+*** You need
+Mandatory
+- 433 MHz Transmitter
+- 1 MOhm resistor
+
+Optional (only if you need to read a signal)
+- 433 MHz Receiver
+- Double ended 3,5 mm cable (use a speaker cable!)
+
+** How it works
+
+The data is encoded on the wire (aerial) as a Manchester code.
+
+A latch of 275us high, 2675us low is sent before the data.
+There is a gap of 10ms between each message.
+
+0 = holding the line high for 275us then low for 275us.
+1 = holding the line high for 275us then low for 1225us.
+
+If this script does not detect your signals try relaxing the timing conditions
+as the timing seems to vary between devices. Just change the ~SLEEP_NS~ variable
+in ~contstants.h~.
+
+Each actual bit of data is encoded as two bits on the wire as:
+Data 0 = Wire 01
+Data 1 = Wire 10
+
+The actual message is 32 bits of data (64 wire bits):
+bits 0-25: the group code - a 26bit number assigned to controllers.
+bit 26: group flag
+bit 27: on/off flag
+bits 28-31: the device code - a 4bit number.
+
+The group flag just seems to be a separate set of addresses you can program
+devices to and doesn't trigger the dim cycle when sending two ONs.
+
+** CGI script
+
+#+BEGIN_SRC bash :results output
+#!/bin/bash
+
+# The binary should be called switch_cgi and be
+# placed in /var/www/<folder>/cgi-bin
+# Permissions: -rwxr-xr-x
+
+echo Content-type: text/plain
+echo
+
+cd /path/to/switch-file
+
+PARAMS=`echo $QUERY_STRING | cut -d\? -f 2`
+
+CHAN=`echo $PARAMS | cut -d\& -f 1`
+ACT=`echo $PARAMS | cut -d\& -f 2`
+
+echo $QUERY_STRING
+echo $PARAMS
+echo $CHAN
+echo $ACT
+
+./nexa $CHAN $ACT
+#+END_SRC
+
+The ~nexa~ script need to be run as root so run ~chmod u+s nexa~ and make sure
+that the root user is the owned of the file
+
+** Simple webpage
+
+Simple web page which should be called ~index.html~ and should be placed in
+~/var/www/<folder>~
+
+#+BEGIN_SRC html
+<html>
+  <head>
+    <title>Switch Control Page</title>
+  </head>
+  <script language="javascript">
+    var m_XML = false;
+
+    function ProcessResponse()
+    {
+      if (m_XML.readyState == 4)
+      {
+        if (m_XML.status == 200)
+        {
+        }
+      }
+    }
+
+    function Doxml(chan,state)
+    {
+      try
+      {
+        if (! m_XML)
+        {
+          if (window.XMLHttpRequest)
+          {
+            m_XML = new XMLHttpRequest();
+          }
+          else if (window.ActiveXObject)
+          {
+            m_XML = new ActiveXObject("Microsoft.XMLHTTP");
+          }
+        }
+
+        if (m_XML)
+        {
+          m_XML.open("GET","cgi-bin/switch_cgi?"+chan+"&"+state);
+          m_XML.onreadystatechange = ProcessResponse ;
+          m_XML.send(null);
+        }
+      }
+      catch (e)
+      {
+      }
+    }
+  </script>
+
+  <body>
+    <table>
+      <tr>
+        <td>Channel 1</td>
+        <td><button type="button" onclick="Doxml('1','on')">ON</button></td>
+        <td><button type="button" onclick="Doxml('1','off')">OFF</button></td>
+      </tr>
+      <tr>
+        <td>Channel 2</td>
+        <td><button type="button" onclick="Doxml('2','on')">ON</button></td>
+        <td><button type="button" onclick="Doxml('2','off')">OFF</button></td>
+      </tr>
+      <tr>
+        <td>Channel 3</td>
+        <td><button type="button" onclick="Doxml('3','on')">ON</button></td>
+        <td><button type="button" onclick="Doxml('3','off')">OFF</button></td>
+      </tr>
+      <tr>
+        <td>Channel 4</td>
+        <td><button type="button" onclick="Doxml('4','on')">ON</button></td>
+        <td><button type="button" onclick="Doxml('4','off')">OFF</button></td>
+      </tr>
+    </table>
+  </body>
+</html>
+#+END_SRC
