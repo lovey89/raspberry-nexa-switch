@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# The binary should be called switch_cgi and be
+# placed in /var/www/<folder>/cgi-bin
+# Permissions: -rwxr-xr-x
+
+echo Content-type: text/plain
+echo
+
+#cd /path/to/switch-file
+
+PARAMS=`echo $QUERY_STRING | cut -d\? -f 2`
+
+CHAN=`echo $PARAMS | cut -d\& -f 1`
+ACT=`echo $PARAMS | cut -d\& -f 2`
+
+echo $QUERY_STRING
+echo $PARAMS
+echo $CHAN
+echo $ACT
+
+./nexa $CHAN $ACT

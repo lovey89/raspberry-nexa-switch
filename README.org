@@ -69,112 +69,58 @@ bits 28-31: the device code - a 4bit number.
 The group flag just seems to be a separate set of addresses you can program
 devices to and doesn't trigger the dim cycle when sending two ONs.
 
-** CGI script
+** Apache setup
 
-#+BEGIN_SRC bash :results output
-#!/bin/bash
+Install apache server
 
-# The binary should be called switch_cgi and be
-# placed in /var/www/<folder>/cgi-bin
-# Permissions: -rwxr-xr-x
-
-echo Content-type: text/plain
-echo
-
-cd /path/to/switch-file
-
-PARAMS=`echo $QUERY_STRING | cut -d\? -f 2`
-
-CHAN=`echo $PARAMS | cut -d\& -f 1`
-ACT=`echo $PARAMS | cut -d\& -f 2`
-
-echo $QUERY_STRING
-echo $PARAMS
-echo $CHAN
-echo $ACT
-
-./nexa $CHAN $ACT
+#+BEGIN_SRC bash
+sudo apt-get install apache2
 #+END_SRC
 
-The ~nexa~ script need to be run as root so run ~chmod u+s nexa~ and make sure
-that the root user is the owned of the file
+Enable apache cgi module and restart the web server
 
-** Simple webpage
-
-Simple web page which should be called ~index.html~ and should be placed in
-~/var/www/<folder>~
-
-#+BEGIN_SRC html
-<html>
-  <head>
-    <title>Switch Control Page</title>
-  </head>
-  <script language="javascript">
-    var m_XML = false;
-
-    function ProcessResponse()
-    {
-      if (m_XML.readyState == 4)
-      {
-        if (m_XML.status == 200)
-        {
-        }
-      }
-    }
-
-    function Doxml(chan,state)
-    {
-      try
-      {
-        if (! m_XML)
-        {
-          if (window.XMLHttpRequest)
-          {
-            m_XML = new XMLHttpRequest();
-          }
-          else if (window.ActiveXObject)
-          {
-            m_XML = new ActiveXObject("Microsoft.XMLHTTP");
-          }
-        }
-
-        if (m_XML)
-        {
-          m_XML.open("GET","cgi-bin/switch_cgi?"+chan+"&"+state);
-          m_XML.onreadystatechange = ProcessResponse ;
-          m_XML.send(null);
-        }
-      }
-      catch (e)
-      {
-      }
-    }
-  </script>
-
-  <body>
-    <table>
-      <tr>
-        <td>Channel 1</td>
-        <td><button type="button" onclick="Doxml('1','on')">ON</button></td>
-        <td><button type="button" onclick="Doxml('1','off')">OFF</button></td>
-      </tr>
-      <tr>
-        <td>Channel 2</td>
-        <td><button type="button" onclick="Doxml('2','on')">ON</button></td>
-        <td><button type="button" onclick="Doxml('2','off')">OFF</button></td>
-      </tr>
-      <tr>
-        <td>Channel 3</td>
-        <td><button type="button" onclick="Doxml('3','on')">ON</button></td>
-        <td><button type="button" onclick="Doxml('3','off')">OFF</button></td>
-      </tr>
-      <tr>
-        <td>Channel 4</td>
-        <td><button type="button" onclick="Doxml('4','on')">ON</button></td>
-        <td><button type="button" onclick="Doxml('4','off')">OFF</button></td>
-      </tr>
-    </table>
-  </body>
-</html>
+#+BEGIN_SRC bash
+sudo a2enmod cgi
+sudo systemctl restart apache2
 #+END_SRC
 
+#+BEGIN_SRC bash
+sudo mkdir /var/www/html/cgi-bin
+#+END_SRC
+
+Modify ~/etc/apache2/sites-available/000-default.conf~ so it looks like
+
+#+BEGIN_SRC
+<VirtualHost *:80>
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/html
+
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+        # Added config not in default file
+        ScriptAlias "/cgi-bin/" "/var/www/html/cgi-bin/"
+</VirtualHost>
+#+END_SRC
+
+Move the file in ~web/switch_cgi~ to ~/var/www/html/cgi-bin/~ and set the
+permissions to ~rwxr-xr-x~
+
+#+BEGIN_SRC bash
+chmod 755 switch_cgi
+#+END_SRC
+
+Also move the compile ~nexa~ binary into ~/var/www/html/cgi-bin/~. Make sure
+it's owned by root and set the suid bit (so it's run as the root)
+
+#+BEGIN_SRC bash
+chmod u+s nexa
+#+END_SRC
+
+Move the file in ~web/index.html~ to ~/var/www/html/~ and restart the web server
+
+#+BEGIN_SRC bash
+sudo systemctl restart apache2
+#+END_SRC
+
+Open a browser, type in the raspberrys ip and click the buttons

@@ -1,0 +1,71 @@
+<html>
+  <head>
+    <title>Switch Control Page</title>
+  </head>
+  <script language="javascript">
+    var m_XML = false;
+
+    function ProcessResponse()
+    {
+      if (m_XML.readyState == 4)
+      {
+        if (m_XML.status == 200)
+        {
+        }
+      }
+    }
+
+    function Doxml(chan,state)
+    {
+      try
+      {
+        if (! m_XML)
+        {
+          if (window.XMLHttpRequest)
+          {
+            m_XML = new XMLHttpRequest();
+          }
+          else if (window.ActiveXObject)
+          {
+            m_XML = new ActiveXObject("Microsoft.XMLHTTP");
+          }
+        }
+
+        if (m_XML)
+        {
+          m_XML.open("GET","cgi-bin/switch_cgi?"+chan+"&"+state);
+          m_XML.onreadystatechange = ProcessResponse ;
+          m_XML.send(null);
+        }
+      }
+      catch (e)
+      {
+      }
+    }
+  </script>
+
+  <body>
+    <table>
+      <tr>
+        <td>Channel 1</td>
+        <td><button type="button" onclick="Doxml('1','on')">ON</button></td>
+        <td><button type="button" onclick="Doxml('1','off')">OFF</button></td>
+      </tr>
+      <tr>
+        <td>Channel 2</td>
+        <td><button type="button" onclick="Doxml('2','on')">ON</button></td>
+        <td><button type="button" onclick="Doxml('2','off')">OFF</button></td>
+      </tr>
+      <tr>
+        <td>Channel 3</td>
+        <td><button type="button" onclick="Doxml('3','on')">ON</button></td>
+        <td><button type="button" onclick="Doxml('3','off')">OFF</button></td>
+      </tr>
+      <tr>
+        <td>Channel 4</td>
+        <td><button type="button" onclick="Doxml('4','on')">ON</button></td>
+        <td><button type="button" onclick="Doxml('4','off')">OFF</button></td>
+      </tr>
+    </table>
+  </body>
+</html>
